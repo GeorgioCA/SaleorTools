@@ -14,28 +14,28 @@ services:
       - common.env
       - backend.env
     environment:
-      DASHBOARD_URL: https://dashboard.eatforkish.com/
-      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_CLIENT_HOSTS: store.eatforkish.com,localhost,127.0.0.1
+      DASHBOARD_URL: https://dashboard.yourdomain.com/
+      ALLOWED_HOSTS: api.yourdomain.com,localhost,127.0.0.1
+      ALLOWED_CLIENT_HOSTS: store.yourdomain.com,localhost,127.0.0.1
       DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
-      PUBLIC_URL: https://api.eatforkish.com
+      PUBLIC_URL: https://api.yourdomain.com
     labels:
       - coolify.managed=true
       - coolify.routing.enabled=true
       - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=api.eatforkish.com
+      - coolify.routing.host=api.yourdomain.com
       - coolify.routing.port=8000
 
   dashboard:
     image: ghcr.io/saleor/saleor-dashboard:latest
     restart: unless-stopped
     environment:
-      API_URL: https://api.eatforkish.com/graphql/
+      API_URL: https://api.yourdomain.com/graphql/
     labels:
       - coolify.managed=true
       - coolify.routing.enabled=true
       - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=dashboard.eatforkish.com
+      - coolify.routing.host=dashboard.yourdomain.com
       - coolify.routing.port=80
 
   db:
