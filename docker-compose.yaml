@@ -1,3 +1,4 @@
+
 services:
   api:
     image: ghcr.io/saleor/saleor:3.22
