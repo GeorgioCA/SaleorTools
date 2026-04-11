@@ -13,6 +13,7 @@ services:
       - '3000:3000'
     networks:
       - saleor_network
+
 networks:
   saleor_network:
     external: false
