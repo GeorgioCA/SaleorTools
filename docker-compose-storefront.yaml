@@ -1,4 +1,4 @@
-version: '3'
+
 services:
   saleor-storefront:
     container_name: saleor-storefront
