@@ -27,6 +27,12 @@ services:
       - coolify.routing.entrypoint=websecure
       - coolify.routing.host=api.example.com
       - coolify.routing.port=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: postgres:15-alpine
@@ -36,12 +42,22 @@ services:
     environment:
       POSTGRES_USER: saleor
       POSTGRES_PASSWORD: saleor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saleor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   cache:
     image: valkey/valkey:8.1-alpine
     restart: unless-stopped
     volumes:
       - saleor-cache:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   worker:
     image: ghcr.io/saleor/saleor:3.22
@@ -51,12 +67,19 @@ services:
       - common.env
       - backend.env
     depends_on:
-      - cache
+      cache:
+        condition: service_healthy
     volumes:
       - saleor-media:/app/media
     environment:
       DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
       REDIS_URL: redis://cache:6379/1
+    healthcheck:
+      test: ["CMD", "celery", "-A", "saleor", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   jaeger:
     image: jaegertracing/jaeger
@@ -64,6 +87,12 @@ services:
     volumes:
       - type: tmpfs
         target: /tmp
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 volumes:
   saleor-db:

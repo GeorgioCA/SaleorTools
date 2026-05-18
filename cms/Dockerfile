@@ -25,7 +25,8 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
-RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
+RUN apk add --no-cache wget && \
+    corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
 COPY --from=builder /app/cms/package.json ./cms/

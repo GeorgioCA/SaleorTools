@@ -11,3 +11,9 @@ services:
       - coolify.routing.entrypoint=websecure
       - coolify.routing.host=dashboard.example.com
       - coolify.routing.port=80
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
