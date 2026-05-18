@@ -32,7 +32,7 @@ Includes: Saleor API, PostgreSQL, Valkey (Redis), Celery worker, Jaeger tracing.
 | Variable | Description | Generate With |
 |----------|-------------|---------------|
 | `SECRET_KEY` | Django secret key | `openssl rand -hex 32` |
-| `RSA_PRIVATE_KEY` | JWT signing key (DER format, hex encoded) | `openssl genrsa 2048 \| openssl pkcs8 -topk8 -nocrypt -outform DER \| xxd -p -c 999` |
+| `RSA_PRIVATE_KEY` | JWT signing key (PEM format) | `openssl genrsa 2048` |
 
 **Deploy:** Point Coolify to `docker-compose-api.yaml`
 
