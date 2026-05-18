@@ -28,10 +28,11 @@ stripe.eatforkish.com      → Stripe payment app
 Includes: Saleor API, PostgreSQL, Valkey (Redis), Celery worker, Jaeger tracing.
 
 **Required env vars (set in Coolify):**
-| Variable | Description |
-|----------|-------------|
-| `SECRET_KEY` | Django secret key — `openssl rand -hex 32` |
-| `RSA_PRIVATE_KEY` | JWT signing key — `openssl genrsa 2048 \| openssl pkcs8 -topk8 -nocrypt -outform DER` |
+
+| Variable | Description | Generate With |
+|----------|-------------|---------------|
+| `SECRET_KEY` | Django secret key | `openssl rand -hex 32` |
+| `RSA_PRIVATE_KEY` | JWT signing key (DER format, hex encoded) | `openssl genrsa 2048 \| openssl pkcs8 -topk8 -nocrypt -outform DER \| xxd -p -c 999` |
 
 **Deploy:** Point Coolify to `docker-compose-api.yaml`
 
@@ -73,13 +74,19 @@ For any app (e.g., `stripe`):
 
 Coolify handles all networking automatically — each app gets its own isolated Docker network and communicates with the API over HTTPS.
 
-### Generating SECRET_KEY
+### Generating Keys
 
-Each app needs a `SECRET_KEY` for encryption. Generate one with:
-
+**SECRET_KEY** (used by API and all apps):
 ```bash
 openssl rand -hex 32
 ```
+
+**RSA_PRIVATE_KEY** (used by API for JWT signing):
+```bash
+openssl genrsa 2048 | openssl pkcs8 -topk8 -nocrypt -outform DER | xxd -p -c 999
+```
+
+Each app also needs its own `SECRET_KEY` — generate one per app with the command above.
 
 ### DynamoDB Setup (optional but recommended)
 
