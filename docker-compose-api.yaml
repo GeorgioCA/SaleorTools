@@ -30,11 +30,11 @@ services:
       - coolify.routing.host=api.eatforkish.com
       - coolify.routing.port=8000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   db:
     image: postgres:15-alpine
@@ -79,11 +79,11 @@ services:
       DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
       REDIS_URL: redis://cache:6379/1
     healthcheck:
-      test: ["CMD", "celery", "-A", "saleor", "inspect", "ping"]
+      test: ["CMD-SHELL", "celery -A saleor inspect ping -t 5 > /dev/null 2>&1 || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 3
-      start_period: 30s
+      start_period: 60s
 
   jaeger:
     image: jaegertracing/jaeger
@@ -92,7 +92,7 @@ services:
       - type: tmpfs
         target: /tmp
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:14269/ > /dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
