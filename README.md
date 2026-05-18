@@ -27,9 +27,11 @@ stripe.eatforkish.com      → Stripe payment app
 
 Includes: Saleor API, PostgreSQL, Valkey (Redis), Celery worker, Jaeger tracing.
 
-**Required env files:**
-- `common.env` — Common Saleor settings
-- `backend.env` — Backend-specific settings
+**Required env vars (set in Coolify):**
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | Django secret key — `openssl rand -hex 32` |
+| `RSA_PRIVATE_KEY` | JWT signing key — `openssl genrsa 2048 \| openssl pkcs8 -topk8 -nocrypt -outform DER` |
 
 **Deploy:** Point Coolify to `docker-compose-api.yaml`
 
