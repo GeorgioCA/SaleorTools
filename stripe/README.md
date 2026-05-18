@@ -26,7 +26,7 @@ stripe/
 3. Set environment variables:
    | Variable | Required | Description |
    |----------|----------|-------------|
-   | `STRIPE_SECRET_KEY` | Yes | Encryption key — run `openssl rand -hex 32` |
+   | `SECRET_KEY` | Yes | Encryption key — run `openssl rand -hex 32` |
    | `AWS_ACCESS_KEY_ID` | No | AWS key for DynamoDB persistence |
    | `AWS_SECRET_ACCESS_KEY` | No | AWS secret for DynamoDB persistence |
    | `AWS_REGION` | No | Default: `us-east-1` |

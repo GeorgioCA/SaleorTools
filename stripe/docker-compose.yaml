@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      SECRET_KEY: ${STRIPE_SECRET_KEY}
+      SECRET_KEY: ${SECRET_KEY}
       SALEOR_API_URL: https://api.eatforkish.com/graphql/
       APP_URL: https://stripe.eatforkish.com
       ALLOWED_DOMAIN_PATTERN: "example\\.com"
