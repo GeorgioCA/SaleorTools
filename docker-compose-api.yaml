@@ -6,14 +6,20 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - db
-      - cache
-      - jaeger
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    command: >
+      bash -c "
+        python manage.py migrate --no-input &&
+        python manage.py collectstatic --no-input &&
+        exec python -m saleor
+      "
     volumes:
       - saleor-media:/app/media
-    env_file:
-      - common.env
-      - backend.env
     environment:
       SECRET_KEY: ${SECRET_KEY}
       RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
@@ -65,10 +71,9 @@ services:
     image: ghcr.io/saleor/saleor:3.22
     command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
     restart: unless-stopped
-    env_file:
-      - common.env
-      - backend.env
     depends_on:
+      db:
+        condition: service_healthy
       cache:
         condition: service_healthy
     volumes:
