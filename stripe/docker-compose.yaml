@@ -1,0 +1,24 @@
+
+services:
+  stripe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${STRIPE_SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://stripe.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      DYNAMODB_MAIN_TABLE_NAME: ${DYNAMODB_MAIN_TABLE_NAME:-stripe-main-table}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=stripe.example.com
+      - coolify.routing.port=3000

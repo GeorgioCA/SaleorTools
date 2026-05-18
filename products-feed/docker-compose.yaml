@@ -1,0 +1,25 @@
+
+services:
+  products-feed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://products-feed.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-us-east-1}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=products-feed.example.com
+      - coolify.routing.port=3000

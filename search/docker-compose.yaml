@@ -1,0 +1,24 @@
+
+services:
+  search:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://search.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      ALGOLIA_APPLICATION_ID: ${ALGOLIA_APPLICATION_ID}
+      ALGOLIA_SEARCH_API_KEY: ${ALGOLIA_SEARCH_API_KEY}
+      ALGOLIA_ADMIN_API_KEY: ${ALGOLIA_ADMIN_API_KEY}
+      ALGOLIA_INDEX_PREFIX: ${ALGOLIA_INDEX_PREFIX:-}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=search.example.com
+      - coolify.routing.port=3000

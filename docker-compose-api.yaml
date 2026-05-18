@@ -1,0 +1,71 @@
+
+services:
+  api:
+    image: ghcr.io/saleor/saleor:3.22
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+      - cache
+      - jaeger
+    volumes:
+      - saleor-media:/app/media
+    env_file:
+      - common.env
+      - backend.env
+    environment:
+      DASHBOARD_URL: https://dashboard.example.com/
+      ALLOWED_HOSTS: api.example.com,localhost,127.0.0.1
+      ALLOWED_CLIENT_HOSTS: store.example.com,localhost,127.0.0.1
+      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
+      PUBLIC_URL: https://api.example.com
+      REDIS_URL: redis://cache:6379/1
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=api.example.com
+      - coolify.routing.port=8000
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    volumes:
+      - saleor-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: saleor
+      POSTGRES_PASSWORD: saleor
+
+  cache:
+    image: valkey/valkey:8.1-alpine
+    restart: unless-stopped
+    volumes:
+      - saleor-cache:/data
+
+  worker:
+    image: ghcr.io/saleor/saleor:3.22
+    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
+    restart: unless-stopped
+    env_file:
+      - common.env
+      - backend.env
+    depends_on:
+      - cache
+    volumes:
+      - saleor-media:/app/media
+    environment:
+      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
+      REDIS_URL: redis://cache:6379/1
+
+  jaeger:
+    image: jaegertracing/jaeger
+    restart: unless-stopped
+    volumes:
+      - type: tmpfs
+        target: /tmp
+
+volumes:
+  saleor-db:
+  saleor-cache:
+  saleor-media:

@@ -1,0 +1,13 @@
+
+services:
+  dashboard:
+    image: ghcr.io/saleor/saleor-dashboard:latest
+    restart: unless-stopped
+    environment:
+      API_URL: https://api.example.com/graphql/
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=dashboard.example.com
+      - coolify.routing.port=80

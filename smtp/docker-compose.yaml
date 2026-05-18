@@ -1,0 +1,27 @@
+
+services:
+  smtp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://smtp.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SENDER_ADDRESS: ${SENDER_ADDRESS}
+      SMTP_CONNECTION_URL: ${SMTP_CONNECTION_URL:-}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=smtp.example.com
+      - coolify.routing.port=3000

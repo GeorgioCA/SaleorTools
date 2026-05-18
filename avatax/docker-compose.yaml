@@ -1,0 +1,28 @@
+
+services:
+  avatax:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://avatax.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      AVATAX_ACCOUNT: ${AVATAX_ACCOUNT}
+      AVATAX_PASSWORD: ${AVATAX_PASSWORD}
+      AVATAX_COMPANY_CODE: ${AVATAX_COMPANY_CODE:-DEFAULT}
+      AVATAX_URL: ${AVATAX_URL:-https://sandbox-rest.avatax.com}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      DYNAMODB_MAIN_TABLE_NAME: ${DYNAMODB_MAIN_TABLE_NAME:-avatax-main-table}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=avatax.example.com
+      - coolify.routing.port=3000

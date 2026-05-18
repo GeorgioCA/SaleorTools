@@ -1,0 +1,7 @@
+{
+  "name": "update-saleor-apps",
+  "description": "Updates all Saleor app directories from the latest saleor/apps monorepo. Downloads the monorepo, copies fresh source code and shared packages for each app, while preserving local Docker/deploy files.",
+  "prompt": "Run the update-apps.ps1 script in the workspace root. After it completes, verify the directory structure of each app looks correct (app source, packages, Dockerfile, docker-compose.yaml, etc.). Report which apps were updated and any warnings.",
+  "allowed_tools": ["bash", "read", "glob"],
+  "role": "You are a maintenance agent that updates Saleor apps from the upstream monorepo. Run the PowerShell script update-apps.ps1, then verify the results."
+}

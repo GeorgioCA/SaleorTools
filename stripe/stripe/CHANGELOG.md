@@ -1,0 +1,372 @@
+# saleor-app-payment-stripe
+
+## 2.6.8
+
+### Patch Changes
+
+- 9044c32: Upgraded protobufjs to v7.5.8 to fix the following CVEs: CVE-2026-41242,
+  CVE-2026-44290, CVE-2026-44291, CVE-2026-44292, CVE-2026-44293,
+  CVE-2026-44294, CVE-2026-44295, CVE-2026-45740.
+
+  This is only relevant for you if you use & enabled OpenTelemetry.
+
+## 2.6.7
+
+### Patch Changes
+
+- 2865a4f: Upgraded next.js to v15.5.18, more info: https://vercel.com/changelog/next-js-may-2026-security-release
+
+## 2.6.6
+
+### Patch Changes
+
+- 4af78c1: Failed JWT verification in tRPC procedures no longer reports to Sentry as an error. Before, an expired or invalid token raised a 500 (or 403) and produced an error in monitoring even though it was a normal client-side auth failure. Now it logs a warning and returns 401, so dashboards stay clean and the client can react to the auth state correctly.
+
+## 2.6.5
+
+### Patch Changes
+
+- 0744721: Added support for changing `SECRET_KEY` in production environment.
+
+  In order to use new secret key add `NEW_SECRET_KEY` env variable.
+  App will use `NEW_SECRET_KEY` for saving new configurations, and will use existing `SECRET_KEY` as a fallback for decryption.
+
+  To update all configurations in all app instances, use rotation script in each app: `pnpm rotate-secret-key`.
+
+  For more details read `packages/shared/src/key-rotation/README.md` documentation
+
+- af75011: Fixed: when the dashboard session/JWT expires, the Stripe app now shows a clear "Session expired" message instead of a cryptic internal error. The backend correctly responds with HTTP 403 instead of 500, so expired sessions no longer show up as server errors in logs.
+- Updated dependencies [0744721]
+  - @saleor/apps-shared@1.14.5
+  - @saleor/apps-trpc@4.0.5
+
+## 2.6.4
+
+### Patch Changes
+
+- 91f6d5f: Added support for OIDC between AWS and Vercel (using `@vercel/oidc-aws-credentials-provider`). Now, when `AWS_ARN` env variable is provided, it will take precedence over IAM secrets. This is more secure way to authenticate and is preferred. IAM secrets stay supported, e.g. for local DynamoDB setup.
+
+## 2.6.3
+
+### Patch Changes
+
+- Updated dependencies [ff4174e]
+  - @saleor/apps-shared@1.14.4
+  - @saleor/apps-trpc@4.0.5
+
+## 2.6.2
+
+### Patch Changes
+
+- 622d13c: Updated GraphQL schema to 3.23
+
+## 2.6.1
+
+### Patch Changes
+
+- 3ecde04: Updated @saleor/app-sdk to v1.7.1
+- b57266c: Attach Saleor domain to Sentry events for better aggregation
+- Updated dependencies [3ecde04]
+  - @saleor/app-problems@1.0.2
+  - @saleor/apps-logger@1.6.4
+  - @saleor/apps-otel@2.4.1
+  - @saleor/react-hook-form-macaw@0.2.17
+  - @saleor/sentry-utils@0.2.6
+  - @saleor/apps-shared@1.14.3
+  - @saleor/apps-trpc@4.0.5
+  - @saleor/apps-ui@1.3.3
+
+## 2.6.0
+
+### Minor Changes
+
+- fab1f78: Webhook responses now return plain text response to Saleor, so it should be properly displayed in dashboard "webhook errors". Previously app was returning `{"message": "..."}` which is not recognized shape officially by Saleor nor Dashboard - it was rendered like text anyway.
+
+### Patch Changes
+
+- 0484f64: Add error cause for verifyJwt failures on tRPC
+- 8cc005b: Updated aws-sdk packages and dynamodb-toolbox to latest versions
+- Updated dependencies [8cc005b]
+  - @saleor/app-problems@1.0.1
+
+## 2.5.1
+
+### Patch Changes
+
+- ddfa9593: Changed how generated graphql->typescript types work. Now only types that are directly or indirectly connected to written documents (mutations, queries) are generated
+
+## 2.5.0
+
+### Minor Changes
+
+- 9c3453dd: Added AppProblems support - now Stripe will report common issues (like invalid secrets) directly to Saleor and Dashboard will display them for the user
+
+### Patch Changes
+
+- cb9bd90f: Fixed issue when app was missing mapping for channel used in payment. Instead of throwing exception, app will now return responses to Saleor webhook with error message.
+- d9bb00f5: GraphQL schema has been refreshed to use latest 3.22 (this updates schema but does not change which APIs are executed)
+- c1cbffb4: Applied "consistent imports" rule from ESLint to ensure type-only imports are marked with `import type` clause. This should improve tree shaking and reduce side effects
+- 041e6065: Verify if webhooks are connected to the original app installation that executed the payment intent
+- dec95470: Removed nested graphql.schema files for each app/package and added root schema. Now all packages have symlink pointing to the same file.
+- Updated dependencies [f0d36e14]
+- Updated dependencies [f0d36e14]
+  - @saleor/apps-shared@1.14.2
+  - @saleor/app-problems@1.0.0
+  - @saleor/apps-trpc@4.0.4
+  - @saleor/apps-logger@1.6.3
+  - @saleor/apps-otel@2.4.0
+  - @saleor/react-hook-form-macaw@0.2.16
+  - @saleor/apps-ui@1.3.2
+
+## 2.4.3
+
+### Patch Changes
+
+- e8996bf7: Return better error message to initializeSession CHARGE_FAILURE - previously error was only returned to storefront (inside "data"), not also visible in the dashboard
+
+## 2.4.2
+
+### Patch Changes
+
+- d7ce7f67: Added client-side error capturing so client exceptions are reported to Sentry.
+
+## 2.4.1
+
+### Patch Changes
+
+- 07057788: Update DynamoDB/AWS & Toolbox dependencies
+
+## 2.4.0
+
+### Minor Changes
+
+- cf9c50af: Added support for _Link_ payment method. Storefront should include `link` payment method in mutation `data`
+- a628f53f: Now app will cancel Payment Intent (on Stripe side) when it fails to finish saving transaction on app's side (record in DynamoDB). That behavior was partially broken and webhooks couldn't be resolved. Now if DynamoDB write fails, app cleans the orphaned intent. This happens on TransactionInitializeSession
+
+### Patch Changes
+
+- d5d7a4fe: Introduced lib t3-oss/env, which adds build-time env variables validation. Now all env variables are statically declared and exposed type-safe way
+- 6e5f69c5: Added max DynamoDB connection and request limits (2s for connection, 5s for request), so in case of downtime, app will terminate earlier
+
+## 2.3.12
+
+### Patch Changes
+
+- 560c3de4: Added logging to DynamoDB APL for better debugging and error visibility.
+
+## 2.3.11
+
+### Patch Changes
+
+- ea7fad59: Changed errors that were printed due to API rejection to be warnings, because they are usually bad payload from storefront
+- 2a4f27ad: Fixed how AWS sdk is initialized by explicitly passing credentials. This is caused by Vercel issue, which started to implicitly override some of our credentials by injecting their own.
+
+## 2.3.10
+
+### Patch Changes
+
+- be1fcf20: Fixed race condition in transaction recording that caused `ConditionalCheckFailedException` errors.
+  Previously, when two concurrent requests with the same idempotency key arrived (e.g., user clicking pay button multiple times),
+  the second request would fail with a DynamoDB error.
+  Now, duplicate write attempts are treated as idempotent success since Stripe already ensures the payment intent is not charged multiple times.
+
+## 2.3.9
+
+### Patch Changes
+
+- 9e17703c: Updated tTRPC to 10.45.3
+
+## 2.3.8
+
+### Patch Changes
+
+- Updated dependencies [37b91c88]
+  - @saleor/apps-otel@2.4.0
+  - @saleor/apps-logger@1.6.3
+
+## 2.3.7
+
+### Patch Changes
+
+- 98459d79: Updated Next.js to 15.2.6
+- b1f10da0: Added logs when app fails to install due to error in APL, or due to disallowed domain and when app installs successfully
+- Updated dependencies [98459d79]
+  - @saleor/apps-logger@1.6.2
+  - @saleor/apps-otel@2.3.1
+  - @saleor/react-hook-form-macaw@0.2.16
+  - @saleor/apps-shared@1.14.1
+  - @saleor/apps-trpc@4.0.4
+  - @saleor/apps-ui@1.3.2
+
+## 2.3.6
+
+### Patch Changes
+
+- 2f3ca93e: Changed legacy-webhook management logic to use "warn" instead of "error" for logs.
+
+## 2.3.5
+
+### Patch Changes
+
+- 27a4d622: Attach errors to trpc handlers for better debugging
+
+## 2.3.4
+
+### Patch Changes
+
+- f53f6e23: Added logs when app installation fails.
+
+## 2.3.3
+
+### Patch Changes
+
+- f531475b: Added additional logging to UpdateMapping handler. Previously no logs were issues when error occured which prevented proper debugging.
+
+## 2.3.2
+
+### Patch Changes
+
+- baf821a9: Fix logger message when canceling payment intent.
+
+## 2.3.1
+
+### Patch Changes
+
+- 86747b3c: When users open app outside of Saleor Dashboard's iframe we will now display an error message with explanation. Previously we rendered app's UI, which caused frontend to make requests to the app without any required data (tokens, saleorApiUrl, etc.) which resulted in error logs.
+
+## 2.3.0
+
+### Minor Changes
+
+- 6b9305d3: Add support for payment method details in transaction events. The Stripe app now fetches and includes payment method information (card brand, last digits, expiration date, etc.) when reporting transaction events to Saleor. This feature is only available for Saleor 3.22+ and includes:
+
+  - New `SaleorPaymentMethodDetails` class for converting Stripe payment method data to Saleor format
+  - Automatic fetching of payment method details from Stripe PaymentIntent
+  - Support for card payment methods (brand, last 4 digits, expiration month/year) and other payment method types
+  - Payment method details included in transaction event reports sent to Saleor
+  - Version compatibility check using `SaleorVersionCompatibilityValidator` to ensure the feature is only used with compatible Saleor versions
+
+### Patch Changes
+
+- Updated dependencies [6b9305d3]
+  - @saleor/apps-shared@1.14.0
+  - @saleor/apps-trpc@4.0.3
+
+## 2.2.2
+
+### Patch Changes
+
+- 22c28c1f: Removed unnecessary error logs that printed all non-ok responses from tRPC in the main Procedure. That is not necessary because main tRPC config already prints errors from 500 status errors. Now only one error will be logged if necessary
+
+## 2.2.1
+
+### Patch Changes
+
+- d19e88fc: Fix copy for restricted key validation. After this change error text will point to proper prefix (rk) instead of (pk).
+
+## 2.2.0
+
+### Minor Changes
+
+- 46ed6766: Add support for [ACH Direct Debit](https://docs.stripe.com/payments/ach-direct-debit) and [SEPA Direct Debit](https://docs.stripe.com/payments/sepa-debit) payment methods.
+  Also fixed issue where app was using incorrect amount when handling processing event from Stripe (previously it was using `amount_received` and after this change it is using `amount` from Stripe event).
+
+### Patch Changes
+
+- 08c22078: Client error with invalid data provided from the storefront now is logged as warning (instead of error). Additionally, data with expected payment method is now printed in log.
+
+## 2.1.3
+
+### Patch Changes
+
+- 45be18b8: Pass metadata to Stripe when creating PaymentIntents to fix webhook validation errors.
+
+## 2.1.2
+
+### Patch Changes
+
+- 16b87f53: Update MacawUI to 1.3.0
+- a7c1cedf: Updated @saleor/app-sdk to 1.3.0
+- Updated dependencies [16b87f53]
+  - @saleor/react-hook-form-macaw@0.2.15
+  - @saleor/apps-shared@1.13.1
+  - @saleor/apps-ui@1.3.1
+  - @saleor/apps-trpc@4.0.3
+
+## 2.1.1
+
+### Patch Changes
+
+- 4c6ab870: Used DynamoAPL from app-sdk instead local package.
+
+## 2.1.0
+
+### Minor Changes
+
+- 30813d53: Events from Stripe that doesn't contain metadata are now gracefully ignored. App will not try to proceed such event, which eventually ended with TransactionNotFound error. Instead it's early returned, not DB is called and proper status is returned to Stripe.
+
+## 2.0.7
+
+### Patch Changes
+
+- 7a834f53: Used shared EmptyConfigs component form @saleor/apps-ui
+- 674b4fa0: Fixed issue with multiple modal rendering. Used shared modal content
+- b1c0139a: Use ConfigsList from shared package
+- Updated dependencies [7a834f53]
+- Updated dependencies [b1c0139a]
+- Updated dependencies [7a834f53]
+- Updated dependencies [674b4fa0]
+  - @saleor/apps-ui@1.3.0
+
+## 2.0.6
+
+### Patch Changes
+
+- fe605010: Update DynamoDB Toolbox to > v2, no function changes introduced
+- b07a2e12: Extract DynamoDB APL to shared package
+- Updated dependencies [b07a2e12]
+  - @saleor/apl-dynamo@2.0.0
+  - @saleor/apps-logger@1.6.1
+
+## 2.0.5
+
+### Patch Changes
+
+- 00070dc3: Move Encryptor to @saleor/apps-shared
+- c9d8b68c: Move generated types from JSON schema to `generated/app-webhooks-types` folder.
+- Updated dependencies [00070dc3]
+  - @saleor/apps-shared@1.13.0
+  - @saleor/apps-trpc@4.0.3
+
+## 2.0.4
+
+### Patch Changes
+
+- 339fbd95: Fixed new config validation - now it will earlier catch mismatched PK and RK (live + test mix) and Sentry will not be called
+- 799be59a: Added generated types from Saleor JSON schemas for webhooks. Fixed missing actions for TransactionInitializeSession. After this change staff user can cancel transaction even if there is no payment made but payment intent has been created.
+- Updated dependencies [d3702072]
+- Updated dependencies [c68f1e9f]
+  - @saleor/apps-logger@1.6.0
+  - @saleor/apps-otel@2.3.0
+
+## 2.0.3
+
+### Patch Changes
+
+- 68425b40: Updated how app handles transaction not found in internal DB - after this change app will responds with 400 status code meaning that Stripe won't retry webhook request.
+- b5420bcf: Add additional Sentry / observability attributes
+- 5b4a6f36: Fixed broken validation for PK and RK on the UI side. Now prefix is validated for early feedback
+- c1a04e31: Fixed Stripe webhook route handler not wrapped in app context & added saleorApiUrl to Sentry when handling tRPC errors.
+
+## 2.0.2
+
+### Patch Changes
+
+- a8cd0eb5: Move building command to DynamoDB into try / catch. After this change when building command fails user will see better error message instead of generic one.
+- 847f8095: Change DynamoDB transaction recorder repo log for error to debug.
+
+## 2.0.1
+
+### Patch Changes
+
+- af4f38ec: App doesn't throw anymore when ID from Stripe doesn't match expected format. Previously app was checking format like "pk*live*" or "whsec\_". Now it will inform Sentry that it faced unexpected value, but continue to work.

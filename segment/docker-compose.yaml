@@ -1,0 +1,25 @@
+
+services:
+  segment:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SALEOR_API_URL: https://api.example.com/graphql/
+      APP_URL: https://segment.example.com
+      ALLOWED_DOMAIN_PATTERN: "example\\.com"
+      APL: file
+      APP_LOG_LEVEL: info
+      SEGMENT_WRITE_KEY: ${SEGMENT_WRITE_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      DYNAMODB_MAIN_TABLE_NAME: ${DYNAMODB_MAIN_TABLE_NAME:-segment-main-table}
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=segment.example.com
+      - coolify.routing.port=3000
