@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     environment:
       SECRET_KEY: ${SECRET_KEY}
-      SALEOR_API_URL: https://api.example.com/graphql/
-      APP_URL: https://avatax.example.com
+      SALEOR_API_URL: https://api.eatforkish.com/graphql/
+      APP_URL: https://avatax.eatforkish.com
       ALLOWED_DOMAIN_PATTERN: "example\\.com"
       APL: file
       APP_LOG_LEVEL: info
@@ -24,7 +24,7 @@ services:
       - coolify.managed=true
       - coolify.routing.enabled=true
       - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=avatax.example.com
+      - coolify.routing.host=avatax.eatforkish.com
       - coolify.routing.port=3000
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]

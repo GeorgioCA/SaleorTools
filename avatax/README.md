@@ -33,4 +33,4 @@ docker compose run --rm avatax pnpm setup-dynamodb
 
 | Service | URL |
 |---------|-----|
-| AvaTax App | https://avatax.example.com |
+| AvaTax App | https://avatax.eatforkish.com |

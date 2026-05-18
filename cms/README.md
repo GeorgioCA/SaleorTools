@@ -21,4 +21,4 @@ CMS integration app for exporting products to DatoCMS, Contentful, and Strapi.
 
 | Service | URL |
 |---------|-----|
-| CMS App | https://cms.example.com |
+| CMS App | https://cms.eatforkish.com |

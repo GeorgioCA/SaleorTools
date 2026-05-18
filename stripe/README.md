@@ -57,4 +57,4 @@ To update to a newer version:
 
 | Service | URL |
 |---------|-----|
-| Stripe App | https://stripe.example.com |
+| Stripe App | https://stripe.eatforkish.com |

@@ -7,18 +7,18 @@ Saleor services and apps deployed on Coolify with a shared Docker network.
 Each service runs as a separate Coolify application. Communication between services happens over HTTPS via Coolify's reverse proxy.
 
 ```
-api.example.com         → Saleor API + PostgreSQL + Valkey + Worker + Jaeger
-dashboard.example.com   → Saleor Dashboard
-store.example.com       → Saleor Storefront
-avatax.example.com      → AvaTax tax calculation app
-cms.example.com         → CMS export app (DatoCMS, Contentful, Strapi)
-klaviyo.example.com     → Klaviyo marketing automation app
-np-atobarai.example.com → NP Atobarai payment app (Japan)
-products-feed.example.com → Product feed generator (XML)
-search.example.com      → Algolia search integration
-segment.example.com     → Twilio Segment analytics app
-smtp.example.com        → SMTP email app with MJML templates
-stripe.example.com      → Stripe payment app
+api.eatforkish.com         → Saleor API + PostgreSQL + Valkey + Worker + Jaeger
+dashboard.eatforkish.com   → Saleor Dashboard
+store.eatforkish.com       → Saleor Storefront
+avatax.eatforkish.com      → AvaTax tax calculation app
+cms.eatforkish.com         → CMS export app (DatoCMS, Contentful, Strapi)
+klaviyo.eatforkish.com     → Klaviyo marketing automation app
+np-atobarai.eatforkish.com → NP Atobarai payment app (Japan)
+products-feed.eatforkish.com → Product feed generator (XML)
+search.eatforkish.com      → Algolia search integration
+segment.eatforkish.com     → Twilio Segment analytics app
+smtp.eatforkish.com        → SMTP email app with MJML templates
+stripe.eatforkish.com      → Stripe payment app
 ```
 
 ## Core Services
@@ -47,15 +47,15 @@ Each app is in its own directory with a self-contained Docker build (source code
 
 | Directory | App | URL | Required Env Vars |
 |-----------|-----|-----|-------------------|
-| `avatax/` | AvaTax | avatax.example.com | `SECRET_KEY`, `AVATAX_ACCOUNT`, `AVATAX_PASSWORD` |
-| `cms/` | CMS | cms.example.com | `SECRET_KEY` |
-| `klaviyo/` | Klaviyo | klaviyo.example.com | `SECRET_KEY` |
-| `np-atobarai/` | NP Atobarai | np-atobarai.example.com | `SECRET_KEY`, `AWS_*` (DynamoDB required) |
-| `products-feed/` | Products Feed | products-feed.example.com | `SECRET_KEY` |
-| `search/` | Search | search.example.com | `SECRET_KEY`, `ALGOLIA_*` |
-| `segment/` | Segment | segment.example.com | `SECRET_KEY`, `SEGMENT_WRITE_KEY` |
-| `smtp/` | SMTP | smtp.example.com | `SECRET_KEY`, `SMTP_*`, `SENDER_ADDRESS` |
-| `stripe/` | Stripe | stripe.example.com | `SECRET_KEY` |
+| `avatax/` | AvaTax | avatax.eatforkish.com | `SECRET_KEY`, `AVATAX_ACCOUNT`, `AVATAX_PASSWORD` |
+| `cms/` | CMS | cms.eatforkish.com | `SECRET_KEY` |
+| `klaviyo/` | Klaviyo | klaviyo.eatforkish.com | `SECRET_KEY` |
+| `np-atobarai/` | NP Atobarai | np-atobarai.eatforkish.com | `SECRET_KEY`, `AWS_*` (DynamoDB required) |
+| `products-feed/` | Products Feed | products-feed.eatforkish.com | `SECRET_KEY` |
+| `search/` | Search | search.eatforkish.com | `SECRET_KEY`, `ALGOLIA_*` |
+| `segment/` | Segment | segment.eatforkish.com | `SECRET_KEY`, `SEGMENT_WRITE_KEY` |
+| `smtp/` | SMTP | smtp.eatforkish.com | `SECRET_KEY`, `SMTP_*`, `SENDER_ADDRESS` |
+| `stripe/` | Stripe | stripe.eatforkish.com | `SECRET_KEY` |
 
 ### Deploying an App on Coolify
 

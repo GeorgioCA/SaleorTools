@@ -32,4 +32,4 @@ docker compose run --rm np-atobarai pnpm setup-dynamodb
 
 | Service | URL |
 |---------|-----|
-| NP Atobarai App | https://np-atobarai.example.com |
+| NP Atobarai App | https://np-atobarai.eatforkish.com |

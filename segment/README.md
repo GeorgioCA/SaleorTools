@@ -30,4 +30,4 @@ docker compose run --rm segment pnpm setup-dynamodb
 
 | Service | URL |
 |---------|-----|
-| Segment App | https://segment.example.com |
+| Segment App | https://segment.eatforkish.com |

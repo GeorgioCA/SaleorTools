@@ -28,4 +28,4 @@ Email integration app for sending transactional emails via SMTP with MJML/Handle
 
 | Service | URL |
 |---------|-----|
-| SMTP App | https://smtp.example.com |
+| SMTP App | https://smtp.eatforkish.com |

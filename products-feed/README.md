@@ -22,4 +22,4 @@ Generates product feed XML for Google Shopping, price comparison sites, etc.
 
 | Service | URL |
 |---------|-----|
-| Products Feed App | https://products-feed.example.com |
+| Products Feed App | https://products-feed.eatforkish.com |

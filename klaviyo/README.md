@@ -21,4 +21,4 @@ Klaviyo integration app for sending Saleor events to Klaviyo marketing automatio
 
 | Service | URL |
 |---------|-----|
-| Klaviyo App | https://klaviyo.example.com |
+| Klaviyo App | https://klaviyo.eatforkish.com |

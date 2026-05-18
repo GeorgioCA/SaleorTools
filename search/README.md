@@ -25,4 +25,4 @@ Algolia search integration for product search and indexing.
 
 | Service | URL |
 |---------|-----|
-| Search App | https://search.example.com |
+| Search App | https://search.eatforkish.com |
