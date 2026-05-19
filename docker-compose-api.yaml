@@ -19,7 +19,7 @@ services:
     volumes:
       - saleor-media:/app/media
     environment:
-      DEBUG: "False"
+      DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
       RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
       DASHBOARD_URL: https://dashboard.eatforkish.com
