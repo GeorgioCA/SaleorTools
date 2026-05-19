@@ -1,0 +1,110 @@
+
+services:
+  api:
+    image: ghcr.io/saleor/saleor:3.22
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    command: >
+      bash -c "
+        python manage.py migrate --no-input &&
+        python manage.py collectstatic --no-input &&
+        exec python -m saleor
+      "
+    volumes:
+      - saleor-media:/app/media
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
+      DASHBOARD_URL: https://dashboard.eatforkish.com/
+      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
+      ALLOWED_CLIENT_HOSTS: store.eatforkish.com,localhost,127.0.0.1
+      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
+      PUBLIC_URL: https://api.eatforkish.com
+      REDIS_URL: redis://cache:6379/1
+      BIND_HOST: 0.0.0.0
+    labels:
+      - coolify.managed=true
+      - coolify.routing.enabled=true
+      - coolify.routing.entrypoint=websecure
+      - coolify.routing.host=api.eatforkish.com
+      - coolify.routing.port=8000
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    volumes:
+      - saleor-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: saleor
+      POSTGRES_PASSWORD: saleor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saleor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cache:
+    image: valkey/valkey:8.1-alpine
+    restart: unless-stopped
+    volumes:
+      - saleor-cache:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: ghcr.io/saleor/saleor:3.22
+    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    volumes:
+      - saleor-media:/app/media
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
+      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
+      REDIS_URL: redis://cache:6379/1
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A saleor inspect ping -t 5 > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+  jaeger:
+    image: jaegertracing/jaeger
+    restart: unless-stopped
+    volumes:
+      - type: tmpfs
+        target: /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:14269/ > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  saleor-db:
+  saleor-cache:
+  saleor-media:

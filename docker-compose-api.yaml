@@ -10,8 +10,6 @@ services:
         condition: service_healthy
       cache:
         condition: service_healthy
-      jaeger:
-        condition: service_started
     command: >
       bash -c "
         python manage.py migrate --no-input &&
@@ -21,21 +19,30 @@ services:
     volumes:
       - saleor-media:/app/media
     environment:
+      DEBUG: "False"
       SECRET_KEY: ${SECRET_KEY}
       RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
-      DASHBOARD_URL: https://dashboard.eatforkish.com/
+      DASHBOARD_URL: https://dashboard.eatforkish.com
       ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_CLIENT_HOSTS: store.eatforkish.com,localhost,127.0.0.1
-      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
-      PUBLIC_URL: https://api.eatforkish.com
-      REDIS_URL: redis://cache:6379/1
+      ALLOWED_CLIENT_HOSTS: api.eatforkish.com,store.eatforkish.com,localhost,127.0.0.1
+      ALLOWED_GRAPHQL_ORIGINS: https://dashboard.eatforkish.com,https://store.eatforkish.com
+      DATABASE_URL: postgres://${POSTGRES_USER:-saleor}:${POSTGRES_PASSWORD:-saleor}@db:5432/${POSTGRES_DB:-saleor}
+      PUBLIC_URL: https://api.eatforkish.com/
+      CACHE_URL: redis://cache:6379/1
+      CELERY_BROKER_URL: redis://cache:6379/1
       BIND_HOST: 0.0.0.0
-    labels:
-      - coolify.managed=true
-      - coolify.routing.enabled=true
-      - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=api.eatforkish.com
-      - coolify.routing.port=8000
+      DEFAULT_CHANNEL_SLUG: default-channel
+      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY:-US}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+      DEFAULT_FROM_EMAIL: noreply@eatforkish.com
+      EMAIL_URL: ${EMAIL_URL:-console://}
+      ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL: "False"
+      PLAYGROUND_ENABLED: "False"
+      HTTP_IP_FILTER_ENABLED: "True"
+      HTTP_IP_FILTER_ALLOW_LOOPBACK_IPS: "False"
+      JWT_TTL_ACCESS: ${JWT_TTL_ACCESS:-5 minutes}
+      JWT_TTL_REFRESH: ${JWT_TTL_REFRESH:-30 days}
+      CHECKOUT_TTL_BEFORE_RELEASING_FUNDS: ${CHECKOUT_TTL_BEFORE_RELEASING_FUNDS:-6 hours}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\""]
       interval: 30s
@@ -49,10 +56,11 @@ services:
     volumes:
       - saleor-db:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: saleor
-      POSTGRES_PASSWORD: saleor
+      POSTGRES_USER: ${POSTGRES_USER:-saleor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saleor}
+      POSTGRES_DB: ${POSTGRES_DB:-saleor}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U saleor"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saleor}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,29 +88,33 @@ services:
     volumes:
       - saleor-media:/app/media
     environment:
+      DEBUG: "False"
       SECRET_KEY: ${SECRET_KEY}
       RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
-      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
-      REDIS_URL: redis://cache:6379/1
+      DASHBOARD_URL: https://dashboard.eatforkish.com
+      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
+      ALLOWED_CLIENT_HOSTS: api.eatforkish.com,store.eatforkish.com,localhost,127.0.0.1
+      DATABASE_URL: postgres://${POSTGRES_USER:-saleor}:${POSTGRES_PASSWORD:-saleor}@db:5432/${POSTGRES_DB:-saleor}
+      PUBLIC_URL: https://api.eatforkish.com/
+      CACHE_URL: redis://cache:6379/1
+      CELERY_BROKER_URL: redis://cache:6379/1
+      DEFAULT_CHANNEL_SLUG: default-channel
+      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY:-US}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+      DEFAULT_FROM_EMAIL: noreply@eatforkish.com
+      EMAIL_URL: ${EMAIL_URL:-console://}
+      ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL: "False"
+      HTTP_IP_FILTER_ENABLED: "True"
+      HTTP_IP_FILTER_ALLOW_LOOPBACK_IPS: "False"
+      JWT_TTL_ACCESS: ${JWT_TTL_ACCESS:-5 minutes}
+      JWT_TTL_REFRESH: ${JWT_TTL_REFRESH:-30 days}
+      CHECKOUT_TTL_BEFORE_RELEASING_FUNDS: ${CHECKOUT_TTL_BEFORE_RELEASING_FUNDS:-6 hours}
     healthcheck:
       test: ["CMD-SHELL", "celery -A saleor inspect ping -t 5 > /dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 15s
       retries: 3
       start_period: 60s
-
-  jaeger:
-    image: jaegertracing/jaeger
-    restart: unless-stopped
-    volumes:
-      - type: tmpfs
-        target: /tmp
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:14269/ > /dev/null 2>&1 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
 
 volumes:
   saleor-db:
