@@ -1,120 +1,86 @@
-
 services:
   api:
     image: ghcr.io/saleor/saleor:3.22
     restart: unless-stopped
-    stdin_open: true
-    tty: true
+
     depends_on:
-      db:
-        condition: service_healthy
-      cache:
-        condition: service_healthy
+      - db
+      - cache
+
     command: >
       bash -c "
         python manage.py migrate --no-input &&
         python manage.py collectstatic --no-input &&
         exec python -m saleor
       "
+
     volumes:
       - saleor-media:/app/media
+
     environment:
-      DEBUG: ${DEBUG}
-      SECRET_KEY: ${SECRET_KEY}
-      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
-      DASHBOARD_URL: https://dashboard.eatforkish.com
-      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_CLIENT_HOSTS: api.eatforkish.com,store.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_GRAPHQL_ORIGINS: https://dashboard.eatforkish.com,https://store.eatforkish.com
-      DATABASE_URL: postgres://${POSTGRES_USER:-saleor}:${POSTGRES_PASSWORD:-saleor}@db:5432/${POSTGRES_DB:-saleor}
-      PUBLIC_URL: https://api.eatforkish.com/
+      DEBUG: ${DEBUG:-False}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       CACHE_URL: redis://cache:6379/1
       CELERY_BROKER_URL: redis://cache:6379/1
-      BIND_HOST: 0.0.0.0
-      DEFAULT_CHANNEL_SLUG: default-channel
-      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY:-US}
-      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
-      DEFAULT_FROM_EMAIL: noreply@eatforkish.com
-      EMAIL_URL: ${EMAIL_URL:-console://}
-      ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL: "False"
-      PLAYGROUND_ENABLED: "False"
-      HTTP_IP_FILTER_ENABLED: "True"
-      HTTP_IP_FILTER_ALLOW_LOOPBACK_IPS: "False"
-      JWT_TTL_ACCESS: ${JWT_TTL_ACCESS:-5 minutes}
-      JWT_TTL_REFRESH: ${JWT_TTL_REFRESH:-30 days}
-      CHECKOUT_TTL_BEFORE_RELEASING_FUNDS: ${CHECKOUT_TTL_BEFORE_RELEASING_FUNDS:-6 hours}
+      SECRET_KEY: ${SECRET_KEY}
+      PUBLIC_URL: ${PUBLIC_URL}
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
 
-  db:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    volumes:
-      - saleor-db:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-saleor}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saleor}
-      POSTGRES_DB: ${POSTGRES_DB:-saleor}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saleor}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  cache:
-    image: valkey/valkey:8.1-alpine
-    restart: unless-stopped
-    volumes:
-      - saleor-cache:/data
-    healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    mem_limit: 1g
+    cpus: 2
 
   worker:
     image: ghcr.io/saleor/saleor:3.22
-    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
+
     restart: unless-stopped
+
     depends_on:
-      db:
-        condition: service_healthy
-      cache:
-        condition: service_healthy
+      - db
+      - cache
+
+    command: celery -A saleor worker -l info -B --concurrency=2
+
     volumes:
       - saleor-media:/app/media
+
     environment:
-      DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY}
-      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
-      DASHBOARD_URL: https://dashboard.eatforkish.com
-      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_CLIENT_HOSTS: api.eatforkish.com,store.eatforkish.com,localhost,127.0.0.1
-      DATABASE_URL: postgres://${POSTGRES_USER:-saleor}:${POSTGRES_PASSWORD:-saleor}@db:5432/${POSTGRES_DB:-saleor}
-      PUBLIC_URL: https://api.eatforkish.com/
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       CACHE_URL: redis://cache:6379/1
       CELERY_BROKER_URL: redis://cache:6379/1
-      DEFAULT_CHANNEL_SLUG: default-channel
-      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY:-US}
-      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
-      DEFAULT_FROM_EMAIL: noreply@eatforkish.com
-      EMAIL_URL: ${EMAIL_URL:-console://}
-      ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL: "False"
-      HTTP_IP_FILTER_ENABLED: "True"
-      HTTP_IP_FILTER_ALLOW_LOOPBACK_IPS: "False"
-      JWT_TTL_ACCESS: ${JWT_TTL_ACCESS:-5 minutes}
-      JWT_TTL_REFRESH: ${JWT_TTL_REFRESH:-30 days}
-      CHECKOUT_TTL_BEFORE_RELEASING_FUNDS: ${CHECKOUT_TTL_BEFORE_RELEASING_FUNDS:-6 hours}
-    healthcheck:
-      test: ["CMD-SHELL", "celery -A saleor inspect ping -t 5 > /dev/null 2>&1 || exit 1"]
-      interval: 30s
-      timeout: 15s
-      retries: 3
-      start_period: 60s
+      SECRET_KEY: ${SECRET_KEY}
+
+    mem_limit: 1g
+    cpus: 2
+
+  db:
+    image: postgres:15-alpine
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      - saleor-db:/var/lib/postgresql/data
+
+  cache:
+    image: valkey/valkey:8.1-alpine
+
+    restart: unless-stopped
+
+    command: valkey-server --appendonly yes
+
+    volumes:
+      - saleor-cache:/data
 
 volumes:
   saleor-db:
