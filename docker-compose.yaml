@@ -1,85 +1,200 @@
-
 services:
   api:
-    image: ghcr.io/saleor/saleor:3.22
+    image: ghcr.io/saleor/saleor:3.23
     restart: unless-stopped
-    stdin_open: true
-    tty: true
+    networks:
+      - saleor-backend-tier
     depends_on:
-      - db
-      - cache
-      - jaeger
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
     volumes:
       - saleor-media:/app/media
     env_file:
       - common.env
       - backend.env
     environment:
-      DASHBOARD_URL: https://dashboard./
-      ALLOWED_HOSTS: api.eatforkish.com,localhost,127.0.0.1
-      ALLOWED_CLIENT_HOSTS: store.eatforkish.com,localhost,127.0.0.1
-      DATABASE_URL: postgres://saleor:saleor@db:5432/saleor
-      PUBLIC_URL: https://api.eatforkish.com
-    labels:
-      - coolify.managed=true
-      - coolify.routing.enabled=true
-      - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=api.eatforkish.com
-      - coolify.routing.port=8000
+      - DEBUG=False
+      - DASHBOARD_URL=${DASHBOARD_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - ALLOWED_CLIENT_HOSTS=${ALLOWED_CLIENT_HOSTS}
+      - PUBLIC_URL=${PUBLIC_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - RSA_PRIVATE_KEY=${RSA_PRIVATE_KEY}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - CACHE_URL=redis://cache:6379/0
+      - CELERY_BROKER_URL=redis://cache:6379/1
+      - EMAIL_URL=${EMAIL_URL}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - DEFAULT_COUNTRY=${DEFAULT_COUNTRY:-US}
+      - DEFAULT_CURRENCY=${DEFAULT_CURRENCY:-USD}
+      - PLAYGROUND_ENABLED=False
+      - HTTP_IP_FILTER_ENABLED=True
+      - EDITOR_JS_LINK_REL=noopener noreferrer
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   dashboard:
-    image: ghcr.io/saleor/saleor-dashboard:latest
+    image: ghcr.io/saleor/saleor-dashboard:3.23
     restart: unless-stopped
+    networks:
+      - saleor-backend-tier
     environment:
-      API_URL: https://api.eatforkish.com/graphql/
-    labels:
-      - coolify.managed=true
-      - coolify.routing.enabled=true
-      - coolify.routing.entrypoint=websecure
-      - coolify.routing.host=dashboard.eatforkish.com
-      - coolify.routing.port=80
+      - API_URI=${PUBLIC_URL}graphql/
+      - DASHBOARD_ALLOW_SIGNUP=${DASHBOARD_ALLOW_SIGNUP:-false}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   db:
-    image: postgres:15-alpine
+    image: library/postgres:15-alpine
     restart: unless-stopped
+    networks:
+      - saleor-backend-tier
     volumes:
       - saleor-db:/var/lib/postgresql/data
-      - ./replica_user.sql:/docker-entrypoint-initdb.d/replica_user.sql:ro
     environment:
-      POSTGRES_USER: saleor
-      POSTGRES_PASSWORD: saleor
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_INITDB_ARGS=--data-checksums
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   cache:
     image: valkey/valkey:8.1-alpine
     restart: unless-stopped
+    networks:
+      - saleor-backend-tier
     volumes:
       - saleor-cache:/data
+    command: valkey-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   worker:
-    image: ghcr.io/saleor/saleor:3.22
-    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
+    image: ghcr.io/saleor/saleor:3.23
+    command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B --concurrency=2 --max-tasks-per-child=1000
     restart: unless-stopped
+    networks:
+      - saleor-backend-tier
     env_file:
       - common.env
       - backend.env
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - CACHE_URL=redis://cache:6379/0
+      - CELERY_BROKER_URL=redis://cache:6379/1
+      - EMAIL_URL=${EMAIL_URL}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - SECRET_KEY=${SECRET_KEY}
+      - RSA_PRIVATE_KEY=${RSA_PRIVATE_KEY}
+      - PUBLIC_URL=${PUBLIC_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - ALLOWED_CLIENT_HOSTS=${ALLOWED_CLIENT_HOSTS}
     depends_on:
-      - cache
-      - mailpit
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
     volumes:
       - saleor-media:/app/media
-
-  jaeger:
-    image: jaegertracing/jaeger
-    restart: unless-stopped
-    volumes:
-      - type: tmpfs
-        target: /tmp
-
-  mailpit:
-    image: axllent/mailpit
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "celery", "-A", "saleor.celeryconf", "inspect", "ping", "--timeout", "5"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   saleor-db:
+    driver: local
   saleor-cache:
+    driver: local
   saleor-media:
+
+networks:
+  saleor-backend-tier:
+    driver: bridge
